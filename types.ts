@@ -55,6 +55,8 @@ export interface TeamMember {
   name: string;
   avatar: string;
   role: string;
+  department?: string;
+  position?: string;
 }
 
 export interface ProjectNotification {

@@ -1,12 +1,25 @@
 
 import React, { useState, useEffect } from 'react';
-import { Plus, Check, Search } from 'lucide-react';
+import { Plus, Check, Search, Building2, Users, ChevronDown } from 'lucide-react';
 import { TeamMember, UserRole } from '../../types';
 import { membersApi } from '../../api/members';
 import ModalLayout from '../shared/ModalLayout';
-import Loading from '../shared/Loading';
+import Loading from '../shared/Loading'; 
 import SearchBox from '../shared/SearchBox';
 import MemberItem from '../shared/MemberItem';
+
+// Department constants
+type DepartmentType = 'all' | string;
+
+const DEPARTMENTS = {
+  ALL: 'all' as DepartmentType,
+  ENGINEERING: 'Engineering',
+  MANAGEMENT: 'Management', 
+  IT: 'IT',
+  MARKETING: 'Marketing',
+  DESIGN: 'Design',
+  INFRASTRUCTURE: 'Hạ tầng'
+};
 
 interface SelectMemberModalProps {
   onSelect: (member: TeamMember) => void;
@@ -28,6 +41,8 @@ const SelectMemberModal: React.FC<SelectMemberModalProps> = ({
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedDepartment, setSelectedDepartment] = useState<DepartmentType>('all');
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [availableMembers, setAvailableMembers] = useState<TeamMember[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -38,6 +53,19 @@ const SelectMemberModal: React.FC<SelectMemberModalProps> = ({
     }
   }, [isOpen, sourceMembers]);
 
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (isDropdownOpen && !target.closest('.dropdown-container')) {
+        setIsDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isDropdownOpen]);
+
   const handleOpen = (e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
     setIsOpen(true);
@@ -46,18 +74,22 @@ const SelectMemberModal: React.FC<SelectMemberModalProps> = ({
   const handleClose = () => {
     setIsOpen(false);
     setSearchTerm('');
+    setSelectedDepartment('all');
+    setIsDropdownOpen(false);
   };
 
   const fetchMembers = async () => {
     setIsLoading(true);
     try {
       const users = await membersApi.fetchMembers();
-      // Chuyển đổi SystemUser sang TeamMember
+      // Chuyển đổi SystemUser sang TeamMember với department và position
       const formatted: TeamMember[] = users.map(u => ({
           id: u.id,
           name: u.name,
           role: u.role,
-          avatar: u.avatar_url || ''
+          avatar: u.avatar_url || '',
+          department: u.department || 'Chưa phân loại',
+          position: u.position || ''
       }));
       // Chỉ lấy MEMBER khi fetch từ hệ thống (logic cũ)
       setAvailableMembers(formatted.filter(p => p.role === UserRole.MEMBER));
@@ -71,10 +103,42 @@ const SelectMemberModal: React.FC<SelectMemberModalProps> = ({
   // Xác định danh sách hiển thị
   const listToRender = sourceMembers || availableMembers;
 
-  const filteredList = listToRender.filter(p => 
+  // Filter logic: search + department
+  const filteredBySearch = listToRender.filter(p => 
       p.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
       p.id.includes(searchTerm)
   );
+
+  const filteredByDepartment = selectedDepartment === 'all' 
+    ? filteredBySearch
+    : filteredBySearch.filter(p => {
+        const memberDept = p.department || 'Chưa phân loại';
+        return memberDept === selectedDepartment;
+      });
+
+  // Group by department for display
+  const groupedMembers = filteredByDepartment.reduce((acc, member) => {
+    const dept = member.department || 'Chưa phân loại';
+    if (!acc[dept]) acc[dept] = [];
+    acc[dept].push(member);
+    return acc;
+  }, {} as Record<string, TeamMember[]>);
+
+  const departmentKeys = Object.keys(groupedMembers).sort();
+
+  // Department options for dropdown
+  const departmentOptions = [
+    { value: 'all', label: 'Tất cả phòng ban' },
+    { value: DEPARTMENTS.ENGINEERING, label: 'Engineering' },
+    { value: DEPARTMENTS.MANAGEMENT, label: 'Management' },
+    { value: DEPARTMENTS.IT, label: 'IT' },
+    { value: DEPARTMENTS.MARKETING, label: 'Marketing' },
+    { value: DEPARTMENTS.DESIGN, label: 'Design' },
+    { value: DEPARTMENTS.INFRASTRUCTURE, label: 'Hạ tầng' },
+    { value: 'Chưa phân loại', label: 'Chưa phân loại' }
+  ];
+
+  const selectedLabel = departmentOptions.find(opt => opt.value === selectedDepartment)?.label || 'Tất cả phòng ban';
 
   return (
     <>
@@ -95,51 +159,146 @@ const SelectMemberModal: React.FC<SelectMemberModalProps> = ({
         onClose={handleClose}
         title={title}
         subTitle={subTitle}
-        className="max-w-md"
+        className="max-w-4xl"
       >
-        <div className="mb-6">
+        {/* Container với height cố định */}
+        <div className="h-[500px] flex flex-col">
+          {/* Search & Department Filter - Fixed */}
+          <div className="mb-6 space-y-4 shrink-0">
           <SearchBox 
             placeholder="Tìm tên hoặc ID nhân viên..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             autoFocus
           />
+          
+          {/* Department Dropdown */}
+          <div className="space-y-2">
+            <label className="text-[10px] font-medium text-slate-400 uppercase tracking-widest flex items-center gap-2">
+              <Building2 size={12} />
+              Phòng ban
+            </label>
+            <div className="relative dropdown-container">
+              <button
+                type="button"
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 rounded-xl text-sm font-medium text-slate-700 transition-all border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              >
+                <span>{selectedLabel}</span>
+                <ChevronDown 
+                  size={16} 
+                  className={`text-slate-400 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} 
+                />
+              </button>
+              
+              {isDropdownOpen && (
+                <>
+                  {/* Backdrop */}
+                  <div 
+                    className="fixed inset-0 z-40" 
+                    onClick={() => setIsDropdownOpen(false)}
+                  />
+                  
+                  {/* Dropdown Menu */}
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-lg z-50 py-2 max-h-64 overflow-y-auto">
+                    {departmentOptions.map(option => (
+                      <button
+                        key={option.value}
+                        type="button"
+                        onClick={() => {
+                          setSelectedDepartment(option.value);
+                          setIsDropdownOpen(false);
+                        }}
+                        className={`w-full text-left px-4 py-2.5 text-sm hover:bg-slate-50 transition-colors ${
+                          selectedDepartment === option.value 
+                            ? 'text-indigo-600 bg-indigo-50 font-medium' 
+                            : 'text-slate-700'
+                        }`}
+                      >
+                        {option.label}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
         </div>
 
-        <div className="space-y-3 pb-6">
-          {isLoading && !sourceMembers ? (
+          {/* Members List - Scrollable */}
+          <div className="flex-1 overflow-y-auto space-y-6 pb-6">
+            {isLoading && !sourceMembers ? (
             <div className="py-6">
                <Loading variant="component" />
             </div>
           ) : (
             <>
-              {filteredList.map((person) => {
-                const isSelected = selectedMemberIds.includes(person.id);
-                
-                // Toggle visual logic: Hiển thị check và highlight nếu đã chọn
-                const ActionIcon = isSelected ? <Check size={18} strokeWidth={3} className="text-indigo-600" /> : null;
-                const itemClass = isSelected ? "bg-indigo-50 hover:bg-indigo-100 ring-1 ring-indigo-200" : "";
+              {departmentKeys.length > 0 ? (
+                departmentKeys.map(department => {
+                  const members = groupedMembers[department];
+                  if (members.length === 0) return null;
+                  
+                  return (
+                    <div key={department} className="space-y-3">
+                      {/* Department Header - Only show if not filtering by specific dept */}
+                      {selectedDepartment === 'all' && (
+                        <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
+                          <Users size={14} className="text-indigo-600" />
+                          <span className="text-sm font-medium text-slate-700">{department}</span>
+                          <span className="text-xs text-slate-400">({members.length} người)</span>
+                        </div>
+                      )}
+                      
+                      {/* Department Members */}
+                      <div className="space-y-2">
+                        {members.map((person) => {
+                          const isSelected = selectedMemberIds.includes(person.id);
+                          const ActionIcon = isSelected ? <Check size={18} strokeWidth={3} className="text-indigo-600" /> : null;
+                          const itemClass = isSelected ? "bg-indigo-50 hover:bg-indigo-100 ring-1 ring-indigo-200" : "";
 
-                return (
-                  <MemberItem 
-                    key={person.id}
-                    member={person}
-                    onClick={() => onSelect(person)}
-                    action={ActionIcon}
-                    className={itemClass}
-                  />
-                );
-              })}
-
-              {filteredList.length === 0 && (
+                          return (
+                            <MemberItem 
+                              key={person.id}
+                              member={person}
+                              subText={person.position || person.role}
+                              onClick={() => onSelect(person)}
+                              action={ActionIcon}
+                              className={itemClass}
+                            />
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })
+              ) : (
                 <div className="py-12 flex flex-col items-center justify-center text-slate-300">
                   <Search size={32} className="opacity-20 mb-3" />
                   <p className="text-sm font-light">Không tìm thấy nhân viên phù hợp</p>
+                  <p className="text-xs font-light opacity-60">Thử thay đổi bộ lọc hoặc từ khóa tìm kiếm</p>
                 </div>
               )}
             </>
           )}
         </div>
+
+        {/* Footer - Fixed at bottom */}
+        {selectedMemberIds.length > 0 && (
+          <div className="pt-4 border-t border-slate-100 shrink-0">
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-slate-600">
+                Đã chọn: <span className="font-medium text-indigo-600">{selectedMemberIds.length}</span> nhân viên
+              </span>
+              <button
+                onClick={handleClose}
+                className="px-4 py-2 bg-indigo-600 text-white rounded-xl text-sm font-medium hover:bg-indigo-700 transition-all active:scale-95"
+              >
+                Xác nhận
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
       </ModalLayout>
     </>
   );
