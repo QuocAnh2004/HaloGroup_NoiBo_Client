@@ -14,7 +14,7 @@ export interface SystemUser {
   phone?: string;
   position?: string;
   level?: string;
-  department?: string;
+  department_id?: string; // Thay đổi từ department thành department_id
   skills?: string;
   github_url?: string;
   
