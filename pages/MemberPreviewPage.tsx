@@ -2,8 +2,9 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { membersApi, SystemUser } from '../api/members';
+import { departmentsApi } from '../api/departments';
 import { projectsApi } from '../api/projects';
-import { Project, AuthenticatedUser, UserRole } from '../types';
+import { Project, AuthenticatedUser, UserRole, Department } from '../types';
 import Loading from '../components/shared/Loading';
 import MemberStats from '../components/member/MemberStats';
 import MemberProjects from '../components/member/MemberProjects';
@@ -11,6 +12,7 @@ import PreviewHeader from '../components/preview/PreviewHeader';
 import Input from '../components/shared/Input';
 import Button from '../components/shared/Button';
 import Toast, { ToastType } from '../components/shared/Toast';
+import SelectGroup from '../components/shared/SelectGroup';
 import { Mail, Phone, Briefcase, Award, Layers, Github, Code2, PencilLine, Check, User, Fingerprint, Info } from 'lucide-react';
 
 interface MemberPreviewPageProps {
@@ -30,6 +32,7 @@ const MemberProfileCard: React.FC<{
   // UX Change: Nếu là chính chủ và hồ sơ trống -> Mặc định bật Edit Mode luôn, đỡ phải bấm nút.
   const [isEditing, setIsEditing] = useState(isOwner && isEmptyProfile);
   const [isLoading, setIsLoading] = useState(false);
+  const [departments, setDepartments] = useState<Department[]>([]);
   const [toast, setToast] = useState<{ message: string, type: ToastType } | null>(null);
 
   // Form state
@@ -37,8 +40,29 @@ const MemberProfileCard: React.FC<{
     email: '',
     phone: '',
     github_url: '',
-    skills: ''
+    skills: '',
+    department_id: ''
   });
+
+  // Load departments on mount
+  useEffect(() => {
+    const loadDepartments = async () => {
+      try {
+        const depts = await departmentsApi.fetchDepartments();
+        setDepartments(depts);
+      } catch (error) {
+        console.error('Error loading departments:', error);
+      }
+    };
+    loadDepartments();
+  }, []);
+
+  // Helper function to get department name
+  const getDepartmentName = (departmentId: string | undefined) => {
+    if (!departmentId) return 'N/A';
+    const dept = departments.find(d => d.id === departmentId);
+    return dept ? `${dept.name} (${dept.code})` : 'N/A';
+  };
 
   useEffect(() => {
     if (member) {
@@ -46,7 +70,8 @@ const MemberProfileCard: React.FC<{
         email: member.email || '',
         phone: member.phone || '',
         github_url: member.github_url || '',
-        skills: member.skills || ''
+        skills: member.skills || '',
+        department_id: member.department_id || ''
       });
       
       // Re-check khi data load xong (trường hợp mount lần đầu chưa có data)
@@ -190,7 +215,7 @@ const MemberProfileCard: React.FC<{
               <Layers size={16} className="text-slate-400 mt-0.5" />
               <div className="text-xs text-slate-500 font-light">
                  Vị trí <span className="font-medium text-slate-700">{member.position || 'N/A'}</span> và 
-                 Phòng ban <span className="font-medium text-slate-700">{member.department || 'N/A'}</span> được quản lý bởi Admin.
+                 Phòng ban <span className="font-medium text-slate-700">{getDepartmentName(member.department_id)}</span> được quản lý bởi Admin.
               </div>
            </div>
 
@@ -224,7 +249,7 @@ const MemberProfileCard: React.FC<{
                 <InfoRow icon={<Phone size={18} />} label="Số điện thoại" value={member.phone} />
                 <InfoRow icon={<Briefcase size={18} />} label="Vị trí" value={member.position} />
                 <InfoRow icon={<Award size={18} />} label="Cấp độ" value={member.level} />
-                <InfoRow icon={<Layers size={18} />} label="Phòng ban" value={member.department} />
+                <InfoRow icon={<Layers size={18} />} label="Phòng ban" value={getDepartmentName(member.department_id)} />
                 <InfoRow icon={<Github size={18} />} label="Github" value={member.github_url} isLink />
               </div>
 
