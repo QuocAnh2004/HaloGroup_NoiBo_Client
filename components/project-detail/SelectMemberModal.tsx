@@ -1,8 +1,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { Plus, Check, Search, Building2, Users, ChevronDown } from 'lucide-react';
-import { TeamMember, UserRole } from '../../types';
+import { TeamMember, UserRole, Department } from '../../types';
 import { membersApi } from '../../api/members';
+import { departmentsApi } from '../../api/departments';
 import ModalLayout from '../shared/ModalLayout';
 import Loading from '../shared/Loading'; 
 import SearchBox from '../shared/SearchBox';
@@ -10,16 +11,6 @@ import MemberItem from '../shared/MemberItem';
 
 // Department constants
 type DepartmentType = 'all' | string;
-
-const DEPARTMENTS = {
-  ALL: 'all' as DepartmentType,
-  ENGINEERING: 'Engineering',
-  MANAGEMENT: 'Management', 
-  IT: 'IT',
-  MARKETING: 'Marketing',
-  DESIGN: 'Design',
-  INFRASTRUCTURE: 'Hạ tầng'
-};
 
 interface SelectMemberModalProps {
   onSelect: (member: TeamMember) => void;
@@ -44,12 +35,13 @@ const SelectMemberModal: React.FC<SelectMemberModalProps> = ({
   const [selectedDepartment, setSelectedDepartment] = useState<DepartmentType>('all');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [availableMembers, setAvailableMembers] = useState<TeamMember[]>([]);
+  const [departments, setDepartments] = useState<Department[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     // Chỉ fetch nếu đang mở và không có source dữ liệu truyền vào
     if (isOpen && !sourceMembers) {
-      fetchMembers();
+      fetchData();
     }
   }, [isOpen, sourceMembers]);
 
@@ -78,23 +70,38 @@ const SelectMemberModal: React.FC<SelectMemberModalProps> = ({
     setIsDropdownOpen(false);
   };
 
-  const fetchMembers = async () => {
+  const fetchData = async () => {
     setIsLoading(true);
     try {
-      const users = await membersApi.fetchMembers();
-      // Chuyển đổi SystemUser sang TeamMember với department và position
+      // Fetch both members and departments in parallel
+      const [users, depts] = await Promise.all([
+        membersApi.fetchMembers(),
+        departmentsApi.fetchDepartments()
+      ]);
+      
+      setDepartments(depts);
+      
+      // Helper function to get department name
+      const getDepartmentName = (departmentId: string | undefined) => {
+        if (!departmentId) return 'Chưa phân loại';
+        const dept = depts.find(d => d.id === departmentId);
+        return dept ? dept.name : 'Chưa phân loại';
+      };
+
+      // Chuyển đổi SystemUser sang TeamMember với department name từ departments API
       const formatted: TeamMember[] = users.map(u => ({
           id: u.id,
           name: u.name,
           role: u.role,
           avatar: u.avatar_url || '',
-          department: u.department || 'Chưa phân loại',
+          department: getDepartmentName(u.department_id),
           position: u.position || ''
       }));
+      
       // Chỉ lấy MEMBER khi fetch từ hệ thống (logic cũ)
       setAvailableMembers(formatted.filter(p => p.role === UserRole.MEMBER));
     } catch (error) {
-      console.error("Failed to fetch members for selection", error);
+      console.error("Failed to fetch data for selection", error);
     } finally {
       setIsLoading(false);
     }
@@ -126,15 +133,13 @@ const SelectMemberModal: React.FC<SelectMemberModalProps> = ({
 
   const departmentKeys = Object.keys(groupedMembers).sort();
 
-  // Department options for dropdown
+  // Department options for dropdown - Dynamic từ departments API
   const departmentOptions = [
     { value: 'all', label: 'Tất cả phòng ban' },
-    { value: DEPARTMENTS.ENGINEERING, label: 'Engineering' },
-    { value: DEPARTMENTS.MANAGEMENT, label: 'Management' },
-    { value: DEPARTMENTS.IT, label: 'IT' },
-    { value: DEPARTMENTS.MARKETING, label: 'Marketing' },
-    { value: DEPARTMENTS.DESIGN, label: 'Design' },
-    { value: DEPARTMENTS.INFRASTRUCTURE, label: 'Hạ tầng' },
+    ...departments.map(dept => ({
+      value: dept.name,
+      label: `${dept.name} (${dept.code})`
+    })),
     { value: 'Chưa phân loại', label: 'Chưa phân loại' }
   ];
 
