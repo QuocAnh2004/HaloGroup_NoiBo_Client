@@ -15,6 +15,24 @@ export enum UserRole {
   MEMBER = 'MEMBER'
 }
 
+export enum DepartmentStatus {
+  ACTIVE = 'ACTIVE',
+  INACTIVE = 'INACTIVE'
+}
+
+export interface Department {
+  id: string;
+  name: string;
+  code: string;
+  description?: string;
+  managerId?: string;
+  managerName?: string; // Populated từ join query
+  status: DepartmentStatus;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Interface cơ bản cho authentication
 export interface AuthenticatedUser {
   id: string;
   name: string;

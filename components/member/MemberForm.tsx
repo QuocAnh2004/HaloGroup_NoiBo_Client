@@ -1,7 +1,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { SystemUser, membersApi } from '../../api/members';
-import { UserRole } from '../../types';
+import { departmentsApi } from '../../api/departments';
+import { UserRole, Department } from '../../types';
 import Input from '../shared/Input';
 import TextArea from '../shared/TextArea';
 import DangerZone from '../shared/DangerZone';
@@ -9,6 +10,7 @@ import Button from '../shared/Button';
 import Toast, { ToastType } from '../shared/Toast';
 import SaveWarning from '../shared/SaveWarning';
 import ModalLayout from '../shared/ModalLayout';
+import SelectGroup from '../shared/SelectGroup';
 import { User, Mail, Phone, Briefcase, Award, Layers, Github, Code2, RotateCcw, ShieldAlert, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -19,13 +21,14 @@ interface MemberFormProps {
 
 const MemberForm: React.FC<MemberFormProps> = ({ member, onUpdate }) => {
   const navigate = useNavigate();
+  const [departments, setDepartments] = useState<Department[]>([]);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     phone: '',
     position: '',
     level: '',
-    department: '',
+    department_id: '',
     skills: '',
     github_url: ''
   });
@@ -39,6 +42,19 @@ const MemberForm: React.FC<MemberFormProps> = ({ member, onUpdate }) => {
   
   const [toast, setToast] = useState<{ message: string, type: ToastType } | null>(null);
 
+  // Load departments on mount
+  useEffect(() => {
+    const loadDepartments = async () => {
+      try {
+        const depts = await departmentsApi.fetchDepartments();
+        setDepartments(depts);
+      } catch (error) {
+        console.error('Error loading departments:', error);
+      }
+    };
+    loadDepartments();
+  }, []);
+
   useEffect(() => {
     if (member) {
       setFormData({
@@ -47,7 +63,7 @@ const MemberForm: React.FC<MemberFormProps> = ({ member, onUpdate }) => {
         phone: member.phone || '',
         position: member.position || '',
         level: member.level || '',
-        department: member.department || '',
+        department_id: member.department_id || '',
         skills: member.skills || '',
         github_url: member.github_url || ''
       });
@@ -87,7 +103,7 @@ const MemberForm: React.FC<MemberFormProps> = ({ member, onUpdate }) => {
         phone: member.phone || '',
         position: member.position || '',
         level: member.level || '',
-        department: member.department || '',
+        department_id: member.department_id || '',
         skills: member.skills || '',
         github_url: member.github_url || ''
     });
@@ -176,13 +192,17 @@ const MemberForm: React.FC<MemberFormProps> = ({ member, onUpdate }) => {
           />
         </div>
 
-        <Input 
+        <SelectGroup 
           label="Phòng ban"
-          name="department"
-          value={formData.department}
+          name="department_id"
+          value={formData.department_id}
           onChange={handleChange}
           icon={<Layers size={12} />}
-          placeholder="VD: Engineering Team A"
+          options={departments.map(dept => ({
+            value: dept.id,
+            label: `${dept.name} (${dept.code})`
+          }))}
+          placeholder="Chọn phòng ban..."
         />
 
         <TextArea 
