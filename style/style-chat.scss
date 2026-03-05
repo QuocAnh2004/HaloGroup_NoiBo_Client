@@ -1,0 +1,25 @@
+// Định nghĩa animation
+@keyframes messageIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+// Sử dụng nesting trong SCSS
+.animate-message {
+  animation: messageIn 0.25s ease;
+
+  // Nếu muốn mở rộng thêm trạng thái hover hoặc modifier
+  &:hover {
+    opacity: 0.9;
+  }
+
+  &.fast {
+    animation-duration: 0.15s;
+  }
+}

@@ -199,5 +199,10 @@ export function getCurrentUser(): AuthenticatedUser | null {
   // };
 export function getInitialUppercase(value?: string | null) {
   const s = String(value ?? "").trim();
-  return s ? s.charAt(0).toUpperCase() : "?";
+  if (!s) return "?";
+
+  const words = s.split(/\s+/);   // tách theo khoảng trắng
+  const lastWord = words[words.length - 1];
+
+  return lastWord.charAt(0).toUpperCase();
 }

@@ -1,5 +1,5 @@
 // ==============================
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useRef, useEffect } from "react";
 import {
   Search,
   Phone,
@@ -23,8 +23,12 @@ const MessengerPage = () => {
     messages,
     isLoading,
     error,
-    sendMessage,  
+    sendMessage,
   } = useChat();
+
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const messagesContainerRef = useRef<HTMLDivElement | null>(null);
+  const [newMessageCount, setNewMessageCount] = useState(0);
 
   const [inputValue, setInputValue] = useState("");
   const [searchValue, setSearchValue] = useState("");
@@ -45,16 +49,36 @@ const MessengerPage = () => {
   //   setInputValue("");
   // };
   const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  if (!inputValue.trim()) return;
-  if (!activeUserId) return;
+    e.preventDefault();
+    if (!inputValue.trim()) return;
+    if (!activeUserId) return;
 
-  const text = inputValue;
-  setInputValue("");
+    const text = inputValue;
+    setInputValue("");
 
-  await sendMessage(text);
-};
+    await sendMessage(text);
+  };
 
+  // tin nhắn mới đến, nếu đang ở gần cuối thì tự động scroll xuống, nếu không thì hiện nút có số lượng tin nhắn mới
+  useEffect(() => {
+    const container = messagesContainerRef.current;
+    if (!container) return;
+
+    const isNearBottom =
+      container.scrollHeight - container.scrollTop - container.clientHeight <
+      120;
+
+    if (isNearBottom) {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+      setNewMessageCount(0);
+    } else {
+      setNewMessageCount((c) => c + 1);
+    }
+  }, [messages]);
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    setNewMessageCount(0);
+  };
   return (
     <div className="h-screen bg-gradient-to-b from-slate-50 via-white to-white">
       <div className="mx-auto h-full max-w-screen-2xl px-4 py-4">
@@ -64,23 +88,23 @@ const MessengerPage = () => {
             <div className="p-4 border-b">
               <div className="flex items-center gap-3">
                 <BackButton onClick={() => window.history.back()} />
-                <img
+                {/* <img
                   src="/chat_page/assets/images/users/user-4.jpg"
                   className="h-12 w-12 rounded-full"
-                />
-                <div>
-                   {/* <div
-                    className={`relative w-14 h-14 rounded-[22px] flex items-center justify-center text-white text-lg font-semibold
+                /> */}
+                <div
+                  className={`relative w-14 h-14 rounded-[22px] flex items-center justify-center text-white text-lg font-semibold
                     shadow-lg transition-all duration-500
                     ${
-                      activeUser
+                      currentUser
                         ? "bg-indigo-600 shadow-indigo-100"
                         : "bg-slate-300 shadow-slate-100 group-hover:bg-indigo-500"
                     }`}
-                  >
-                    {getInitialUppercase(activeUser?.name || "")}
-                    <span className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-white bg-emerald-400" />
-                  </div> */}
+                >
+                  {getInitialUppercase(currentUser?.name || "")}
+                  <span className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-white bg-emerald-400" />
+                </div>
+                <div>
                   <p className="font-semibold text-slate-900">
                     {currentUser?.name || "Người dùng"}
                   </p>
@@ -148,9 +172,9 @@ const MessengerPage = () => {
           </aside>
 
           {/* CHAT */}
-          <section className="col-span-8 lg:col-span-9 rounded-3xl border bg-white shadow-sm flex flex-col overflow-hidden">
+          <section className="col-span-8 lg:col-span-9 rounded-3xl border bg-white shadow-sm flex flex-col min-h-0">
             {/* Header */}
-            <div className="h-16 px-5 border-b flex items-center justify-between">
+            <div className="h-16 px-5 border-b flex items-center justify-between sticky top-0 z-20 bg-white">
               <div className="flex items-center gap-3">
                 {/* <div
                   className={`relative w-14 h-14 rounded-[22px] flex items-center justify-center text-white text-lg font-semibold
@@ -160,18 +184,18 @@ const MessengerPage = () => {
                   {getInitialUppercase(activeUser?.name)}
                   <span className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-white bg-emerald-400" />
                 </div> */}
-                 <div
-                    className={`relative w-14 h-14 rounded-[22px] flex items-center justify-center text-white text-lg font-semibold
+                <div
+                  className={`relative w-14 h-14 rounded-[22px] flex items-center justify-center text-white text-lg font-semibold
                     shadow-lg transition-all duration-500
                     ${
                       activeUser
                         ? "bg-indigo-600 shadow-indigo-100"
                         : "bg-slate-300 shadow-slate-100 group-hover:bg-indigo-500"
                     }`}
-                  >
-                    {getInitialUppercase(activeUser?.name)}
-                    <span className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-white bg-emerald-400" />
-                  </div>
+                >
+                  {getInitialUppercase(activeUser?.name)}
+                  <span className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-white bg-emerald-400" />
+                </div>
 
                 <p className="font-semibold">
                   {activeUser?.name} ({activeUser?.userId})
@@ -189,7 +213,10 @@ const MessengerPage = () => {
             </div>
 
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3 bg-slate-50/40">
+            <div
+              ref={messagesContainerRef}
+              className="flex-1 min-h-0 overflow-y-auto px-5 py-4 space-y-3 bg-slate-50/40"
+            >
               {isLoading && (
                 <div className="text-sm text-slate-500">
                   Đang tải tin nhắn...
@@ -210,16 +237,16 @@ const MessengerPage = () => {
                       className={`flex ${isMe ? "justify-end" : "justify-start"} gap-2`}
                     >
                       {/* Avatar chỉ hiện với tin người khác */}
-                      {!isMe && (
+                      {/* {!isMe && (
                         <img
-                          src={activeUser?.avatar}
+                          src={activeUser?.avatar || ``}
                           className="h-8 w-8 rounded-full"
                           alt=""
                         />
-                      )}
+                      )} */}
 
                       <div
-                        className={`max-w-[75%] px-4 py-2 rounded-2xl text-sm shadow
+                        className={`max-w-[75%] px-4 py-2 rounded-2xl text-sm shadow animate-message
             ${
               isMe
                 ? "bg-indigo-600 text-white rounded-br-md"
@@ -232,12 +259,23 @@ const MessengerPage = () => {
                     </div>
                   );
                 })}
+              {newMessageCount > 0 && (
+                <div className="sticky bottom-2 flex justify-center">
+                  <button
+                    onClick={scrollToBottom}
+                    className="px-4 py-1 text-xs bg-indigo-600 text-white rounded-full shadow hover:bg-indigo-700"
+                  >
+                    ↓ {newMessageCount} tin nhắn mới
+                  </button>
+                </div>
+              )}
+              <div ref={messagesEndRef} />
             </div>
 
             {/* Input */}
             <form
               onSubmit={handleSubmit}
-              className="border-t px-4 py-3 flex items-center gap-2"
+              className="border-t px-4 py-3 flex items-center gap-2 sticky bottom-0 z-20 bg-white"
             >
               <button type="button" className="icon-btn">
                 <Camera size={18} />
@@ -285,6 +323,21 @@ const MessengerPage = () => {
           justify-content: center;
         }
         .send-btn:hover { background: #4338ca; }
+
+        @keyframes messageIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-message {
+  animation: messageIn 0.25s ease;
+}
       `}</style>
     </div>
   );

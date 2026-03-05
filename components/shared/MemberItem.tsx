@@ -1,6 +1,8 @@
 
 import React from 'react';
 import { User } from 'lucide-react';
+import { getInitialUppercase } from "@/utils";
+
 
 export interface MemberItemProps {
   member: {
@@ -35,7 +37,7 @@ const MemberItem: React.FC<MemberItemProps> = ({
         onClick={!disabled ? onClick : undefined}
         className={`group/member relative w-8 h-8 md:w-9 md:h-9 bg-indigo-600 text-white rounded-xl flex items-center justify-center font-medium shadow-sm transition-all cursor-default ${!disabled && onClick ? 'cursor-pointer hover:-translate-y-0.5' : ''} ${className}`}
       >
-        <span className="text-[10px] md:text-xs">{getInitial(member.name)}</span>
+        <span className="text-[10px] md:text-xs">{getInitialUppercase(member.name)}</span>
         
         {/* Tooltip - Sử dụng group-hover/member để chỉ hiện khi hover đúng vào item này */}
         <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 bg-slate-900 text-white text-[10px] font-medium rounded-xl opacity-0 group-hover/member:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-[100] shadow-xl">
@@ -63,7 +65,7 @@ const MemberItem: React.FC<MemberItemProps> = ({
         <div className={`w-10 h-10 md:w-12 md:h-12 rounded-xl md:rounded-2xl flex items-center justify-center text-xs md:text-sm font-medium shadow-sm shrink-0 transition-colors ${
            disabled ? 'bg-slate-300 text-white' : 'bg-indigo-600 text-white'
         }`}>
-          {getInitial(member.name)}
+          {getInitialUppercase(member.name)}
         </div>
         
         {/* Info */}
