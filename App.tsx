@@ -4,9 +4,10 @@ import ProjectPage from './pages/ProjectPage';
 import ProjectDetailPage from './pages/ProjectDetailPage';
 import ProjectPreviewPage from './pages/ProjectPreviewPage';
 import MemberDetailPage from './pages/MemberDetailPage';
-import MemberPreviewListPage from './pages/MemberPreviewListPage'; 
+import MemberPreviewListPage from './pages/MemberPreviewListPage';
 import MemberPreviewPage from './pages/MemberPreviewPage';
 import UserGuidePage from './pages/UserGuidePage';
+import { MemberTaskListPage } from './pages/MemberTaskListPage';
 import ProjectTeam from './components/projects/ProjectOnlyTeam';
 import ProjectMesseges from './components/projects/ProjectMesseges';
 import Login from './components/auth/Login';
@@ -75,86 +76,93 @@ const App: React.FC = () => {
       )}
 
 
-    <Routes>
-      
-       
-      <Route path="/login" element={!user ? <Login onLogin={handleLogin} /> : <Navigate to="/" replace />} />
-      
-      {/* Route đổi mật khẩu công khai */}
-      <Route path="/change-password" element={
-        <ChangePassword user={user || undefined} />
-      } />
+      <Routes>
 
-      {/* Trang Hướng dẫn sử dụng (Shared) */}
-      <Route path="/guide" element={
-        <ProtectedRoute user={user} onLogin={handleLogin}>
-          <UserGuidePage />
-        </ProtectedRoute>
-      } />
 
-      {/* Trang Hướng đến nhân sự */}
-      <Route path="/employees" element={
-        <ProtectedRoute user={user} onLogin={handleLogin}>
-          <ProjectTeam />
-        </ProtectedRoute>
-      } />
-      {/* Trang Hướng đến nhân sự */}
-      <Route path="/messages" element={
-        <ProtectedRoute user={user} onLogin={handleLogin}>
-          <ProjectMesseges />
-        </ProtectedRoute>
-      } />
+        <Route path="/login" element={!user ? <Login onLogin={handleLogin} /> : <Navigate to="/" replace />} />
 
-      {/* Trang Dashboard (Root): Xử lý logic redirect */}
-      <Route path="/" element={
-        !user ? <Login onLogin={handleLogin} /> : 
-        (user.role === UserRole.MANAGER ? <ProjectPage onLogout={handleLogout} /> : <Navigate to={`/member-info/${user.id}`} replace />)
-      } />
+        {/* Route đổi mật khẩu công khai */}
+        <Route path="/change-password" element={
+          <ChangePassword user={user || undefined} />
+        } />
 
-      {/* Trang Chi tiết (Edit): Chỉ Manager */}
-      <Route path="/project/:projectId" element={
-        <ProtectedRoute user={user} onLogin={handleLogin} requiredRole={UserRole.MANAGER}>
-          <ProjectDetailPage />
-        </ProtectedRoute>
-      } />
+        {/* Trang Hướng dẫn sử dụng (Shared) */}
+        <Route path="/guide" element={
+          <ProtectedRoute user={user} onLogin={handleLogin}>
+            <UserGuidePage />
+          </ProtectedRoute>
+        } />
 
-      {/* Trang Danh sách Nhân viên (Preview): Shared cho cả 2 role */}
-      <Route path="/members" element={
-        <ProtectedRoute user={user} onLogin={handleLogin}>
-          <MemberPreviewListPage currentUser={user!} onLogout={handleLogout} />
-        </ProtectedRoute>
-      } />
+        {/* Trang Hướng đến nhân sự */}
+        <Route path="/employees" element={
+          <ProtectedRoute user={user} onLogin={handleLogin}>
+            <ProjectTeam />
+          </ProtectedRoute>
+        } />
+        {/* Trang Hướng đến nhân sự */}
+        <Route path="/messages" element={
+          <ProtectedRoute user={user} onLogin={handleLogin}>
+            <ProjectMesseges />
+          </ProtectedRoute>
+        } />
 
-      {/* Trang Chi tiết Nhân viên (Edit): Chỉ Manager */}
-      <Route path="/member/:memberId" element={
-        <ProtectedRoute user={user} onLogin={handleLogin} requiredRole={UserRole.MANAGER}>
-          <MemberDetailPage />
-        </ProtectedRoute>
-      } />
+        {/* Trang Dashboard (Root): Xử lý logic redirect */}
+        <Route path="/" element={
+          !user ? <Login onLogin={handleLogin} /> :
+            (user.role === UserRole.MANAGER ? <ProjectPage onLogout={handleLogout} /> : <Navigate to={`/member-info/${user.id}`} replace />)
+        } />
 
-      {/* Trang Chi tiết Nhân viên (Read Only): Shared cho mọi role */}
-      {/* Đây là trang đích của Member sau khi login */}
-      <Route path="/member-info/:memberId" element={
-        <ProtectedRoute user={user} onLogin={handleLogin}>
-          <MemberPreviewPage currentUser={user!} onLogout={handleLogout} />
-        </ProtectedRoute>
-      } />
+        {/* Trang Chi tiết (Edit): Chỉ Manager */}
+        <Route path="/project/:projectId" element={
+          <ProtectedRoute user={user} onLogin={handleLogin} requiredRole={UserRole.MANAGER}>
+            <ProjectDetailPage />
+          </ProtectedRoute>
+        } />
 
-      {/* Trang Preview: Cả 2 đều xem được */}
-      <Route path="/project/:projectId/preview" element={
-        <ProtectedRoute user={user} onLogin={handleLogin}>
-          <ProjectPreviewPage currentUser={user!} onLogout={handleLogout} />
-        </ProtectedRoute>
-      } />
-    
-      {/* Mọi route lạ đều về trang chủ */}
-      <Route path="*" element={<Navigate to="/" replace />} />
+        {/* Trang Danh sách Nhân viên (Preview): Shared cho cả 2 role */}
+        <Route path="/members" element={
+          <ProtectedRoute user={user} onLogin={handleLogin}>
+            <MemberPreviewListPage currentUser={user!} onLogout={handleLogout} />
+          </ProtectedRoute>
+        } />
 
-    
+        {/* Trang Danh sách Nhân viên với Task Count: Chỉ Manager */}
+        <Route path="/members/task-list" element={
+          <ProtectedRoute user={user} onLogin={handleLogin} requiredRole={UserRole.MANAGER}>
+            <MemberTaskListPage />
+          </ProtectedRoute>
+        } />
 
-    </Routes>
+        {/* Trang Chi tiết Nhân viên (Edit): Chỉ Manager */}
+        <Route path="/member/:memberId" element={
+          <ProtectedRoute user={user} onLogin={handleLogin} requiredRole={UserRole.MANAGER}>
+            <MemberDetailPage />
+          </ProtectedRoute>
+        } />
+
+        {/* Trang Chi tiết Nhân viên (Read Only): Shared cho mọi role */}
+        {/* Đây là trang đích của Member sau khi login */}
+        <Route path="/member-info/:memberId" element={
+          <ProtectedRoute user={user} onLogin={handleLogin}>
+            <MemberPreviewPage currentUser={user!} onLogout={handleLogout} />
+          </ProtectedRoute>
+        } />
+
+        {/* Trang Preview: Cả 2 đều xem được */}
+        <Route path="/project/:projectId/preview" element={
+          <ProtectedRoute user={user} onLogin={handleLogin}>
+            <ProjectPreviewPage currentUser={user!} onLogout={handleLogout} />
+          </ProtectedRoute>
+        } />
+
+        {/* Mọi route lạ đều về trang chủ */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+
+
+
+      </Routes>
     </>
-    
+
   );
 };
 
