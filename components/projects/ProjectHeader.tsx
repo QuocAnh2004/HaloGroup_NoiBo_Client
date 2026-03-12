@@ -1,6 +1,8 @@
 import React from 'react';
 import { LogOut, ShieldCheck, HelpCircle, Menu, X, MessageCircleMore, Users } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { getCurrentUser } from "@/utils";
+import { UserRole } from "../../types";
 
 interface ProjectHeaderProps {
   onLogout: () => void;
@@ -10,6 +12,8 @@ interface ProjectHeaderProps {
 const ProjectHeader: React.FC<ProjectHeaderProps> = ({ onLogout, onChangePassword }) => {
   const navigate = useNavigate();
   const [open, setOpen] = React.useState(false);
+
+  const currentUser = getCurrentUser();
 
   return (
     <>
@@ -58,14 +62,16 @@ const ProjectHeader: React.FC<ProjectHeaderProps> = ({ onLogout, onChangePasswor
 
         {/* Body của Menu: Dài xuống hết cỡ */}
         <div className="flex-1 overflow-y-auto p-4 space-y-2">
-          
-          <button
+           {currentUser?.role === UserRole.MANAGER && (
+              <button
             onClick={() => { navigate("/employees"); setOpen(false); }}
             className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-800 text-slate-300 transition group"
           >
             <Users size={20} className="group-hover:text-blue-400" />
             <span>Nhân sự</span>
           </button>
+           )}
+        
           <button
             onClick={() => { navigate("/messages"); setOpen(false); }}
             className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-800 text-slate-300 transition group"
