@@ -8,7 +8,7 @@ export interface SystemUser {
   password?: string;
   role: UserRole;
   avatar_url?: string;
-  
+
   // New Fields
   email?: string;
   phone?: string;
@@ -17,13 +17,26 @@ export interface SystemUser {
   department_id?: string; // Thay đổi từ department thành department_id
   skills?: string;
   github_url?: string;
-  
+
   created_at?: string;
+}
+
+export interface SystemUserWithTaskCount extends SystemUser {
+  task_count: number;
+  department?: {
+    id: string;
+    name: string;
+    code: string;
+  } | null;
 }
 
 export const membersApi = {
   fetchMembers: async (): Promise<SystemUser[]> => {
     return authFetch('/members');
+  },
+
+  fetchMembersWithTaskCount: async (): Promise<SystemUserWithTaskCount[]> => {
+    return authFetch('/members/with-task-count');
   },
 
   fetchMemberById: async (id: string): Promise<SystemUser> => {

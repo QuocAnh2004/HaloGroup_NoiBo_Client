@@ -1,5 +1,5 @@
 import React from 'react';
-import { LogOut, ShieldCheck, HelpCircle, Menu, X, MessageCircleMore, Users } from 'lucide-react';
+import { LogOut, ShieldCheck, HelpCircle, Menu, X, MessageCircleMore, Users, ListTodo } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { getCurrentUser } from "@/utils";
 import { UserRole } from "../../types";
@@ -36,23 +36,21 @@ const ProjectHeader: React.FC<ProjectHeaderProps> = ({ onLogout, onChangePasswor
       </nav>
 
       {/* OVERLAY: Lớp phủ tối phía sau */}
-      <div 
-        className={`fixed inset-0 z-[9998] bg-black/50 backdrop-blur-sm transition-opacity duration-300 ${
-          open ? "opacity-100 visible" : "opacity-0 invisible"
-        }`}
+      <div
+        className={`fixed inset-0 z-[9998] bg-black/50 backdrop-blur-sm transition-opacity duration-300 ${open ? "opacity-100 visible" : "opacity-0 invisible"
+          }`}
         onClick={() => setOpen(false)}
       />
 
       {/* ASIDE: Menu trượt ra */}
-      <aside 
-        className={`fixed top-0 right-0 z-[9999] h-screen w-[320px] bg-slate-900 shadow-2xl flex flex-col transition-transform duration-300 ease-in-out ${
-          open ? "translate-x-0" : "translate-x-full"
-        }`}
+      <aside
+        className={`fixed top-0 right-0 z-[9999] h-screen w-[320px] bg-slate-900 shadow-2xl flex flex-col transition-transform duration-300 ease-in-out ${open ? "translate-x-0" : "translate-x-full"
+          }`}
       >
         {/* Header của Menu */}
         <div className="h-20 flex items-center justify-between px-6 border-b border-slate-800">
           <span className="font-bold text-xl text-white">Menu</span>
-          <button 
+          <button
             onClick={() => setOpen(false)}
             className="p-2 rounded-xl hover:bg-slate-800 text-slate-400 transition-colors"
           >
@@ -62,16 +60,23 @@ const ProjectHeader: React.FC<ProjectHeaderProps> = ({ onLogout, onChangePasswor
 
         {/* Body của Menu: Dài xuống hết cỡ */}
         <div className="flex-1 overflow-y-auto p-4 space-y-2">
-           {currentUser?.role === UserRole.MANAGER && (
-              <button
+
+          <button
             onClick={() => { navigate("/employees"); setOpen(false); }}
             className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-800 text-slate-300 transition group"
           >
             <Users size={20} className="group-hover:text-blue-400" />
             <span>Nhân sự</span>
           </button>
-           )}
+           
         
+          <button
+            onClick={() => { navigate("/members/task-list"); setOpen(false); }}
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-800 text-slate-300 transition group"
+          >
+            <ListTodo size={20} className="group-hover:text-green-400" />
+            <span>Công việc nhân viên</span>
+          </button>
           <button
             onClick={() => { navigate("/messages"); setOpen(false); }}
             className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-800 text-slate-300 transition group"
@@ -80,12 +85,12 @@ const ProjectHeader: React.FC<ProjectHeaderProps> = ({ onLogout, onChangePasswor
             <span>Tin nhắn</span>
           </button>
 
-         
+
         </div>
 
         {/* Footer*/}
         <div className="p-4 border-t border-slate-800 bg-slate-900/50">
-         <button
+          <button
             onClick={() => { navigate("/guide"); setOpen(false); }}
             className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-800 text-slate-300 transition group"
           >
