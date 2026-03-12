@@ -54,8 +54,15 @@ const DeadlinePicker: React.FC<DeadlinePickerProps> = ({
   const statusInfo = getTaskStatus(value, isCompleted);
   
   const currentDate = new Date(value || Date.now());
-  const min = new Date(minDate.includes('T') ? minDate : `${minDate}T00:00`);
-  const max = new Date(maxDate.includes('T') ? maxDate : `${maxDate}T23:59`);
+  
+  // Safe parsing for min/max dates
+  const parseSafeDate = (dateStr: string, defaultTime: string) => {
+    if (!dateStr) return new Date(value || Date.now());
+    return new Date(dateStr.includes('T') ? dateStr : `${dateStr}${defaultTime}`);
+  };
+
+  const min = parseSafeDate(minDate, 'T00:00');
+  const max = parseSafeDate(maxDate, 'T23:59');
 
   const [viewDate, setViewDate] = useState(new Date(currentDate));
 

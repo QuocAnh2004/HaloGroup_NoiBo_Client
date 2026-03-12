@@ -66,46 +66,49 @@ export const MemberTaskList: React.FC<MemberTaskListProps> = ({ className = '' }
 
   return (
     <div className={`${className}`}>
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-800">
-            Danh sách nhân viên và công việc
-          </h3>
-          <p className="text-sm text-gray-600 mt-1">
-            Tổng số nhân viên: {members.length}
-          </p>
+      <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <div className="px-6 py-5 border-b border-slate-100 flex justify-between items-center">
+          <div>
+            <h3 className="text-lg font-bold text-slate-800">
+              Danh sách nhân viên và công việc
+            </h3>
+            <p className="text-sm text-slate-500 mt-0.5">
+              Tổng số {members.length} nhân viên
+            </p>
+          </div>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+        {/* Scrollable Container with Max Height */}
+        <div className="overflow-x-auto max-h-[500px] overflow-y-auto">
+          <table className="min-w-full border-separate border-spacing-0">
+            <thead className="sticky top-0 z-10 bg-slate-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider border-b border-slate-200">
                   Nhân viên
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Chức vụ
+                <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider border-b border-slate-200">
+                  Vị trí
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider border-b border-slate-200">
                   Phòng ban
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-center text-xs font-semibold text-slate-500 uppercase tracking-wider border-b border-slate-200">
                   Vai trò
                 </th>
-                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Số task đang làm
+                <th className="px-6 py-3 text-center text-xs font-semibold text-slate-500 uppercase tracking-wider border-b border-slate-200">
+                  Số lượng Task
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="bg-white divide-y divide-slate-100">
               {members.map((member) => (
-                <tr key={member.id} className="hover:bg-gray-50">
+                <tr key={member.id} className="hover:bg-slate-50/50 transition-colors">
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <div className="flex-shrink-0 h-10 w-10">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-slate-100 overflow-hidden border border-slate-200 shrink-0">
                         {member.avatar_url ? (
                           <img
-                            className="h-10 w-10 rounded-full object-cover"
+                            className="w-full h-full object-cover"
                             src={member.avatar_url}
                             alt={member.name}
                             onError={(e) => {
@@ -114,51 +117,59 @@ export const MemberTaskList: React.FC<MemberTaskListProps> = ({ className = '' }
                             }}
                           />
                         ) : (
-                          <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
-                            <span className="text-sm font-medium text-gray-600">
-                              {member.name.charAt(0).toUpperCase()}
-                            </span>
+                          <div className="w-full h-full flex items-center justify-center bg-slate-200 text-slate-500 font-bold uppercase">
+                            {member.name.charAt(0)}
                           </div>
                         )}
                       </div>
-                      <div className="ml-4">
-                        <div className="text-sm font-medium text-gray-900">
+                      <div className="flex flex-col min-w-0">
+                        <div className="text-sm font-medium text-slate-900 truncate">
                           {member.name}
                         </div>
-                        <div className="text-sm text-gray-500">
-                          ID: {member.id}
+                        <div className="text-xs text-slate-400 font-mono">
+                          #{member.id}
                         </div>
                       </div>
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">
+                    <div className="text-sm text-slate-700">
                       {member.position || '-'}
                     </div>
-                    <div className="text-sm text-gray-500">
+                    <div className="text-xs text-slate-400">
                       {member.level || '-'}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">
+                    <div className="text-sm text-slate-700">
                       {member.department?.name || '-'}
                     </div>
-                    <div className="text-sm text-gray-500">
+                    <div className="text-xs text-slate-400 uppercase font-bold tracking-tighter">
                       {member.department?.code || '-'}
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={getRoleBadge(member.role)}>
+                  <td className="px-6 py-4 whitespace-nowrap text-center">
+                    <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold uppercase border ${
+                      member.role === 'MANAGER' 
+                        ? 'bg-blue-50 text-blue-600 border-blue-100' 
+                        : 'bg-slate-50 text-slate-600 border-slate-200'
+                    }`}>
                       {member.role === 'MANAGER' ? 'Quản lý' : 'Nhân viên'}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-center">
-                    <div className={`text-2xl font-bold ${getTaskCountColor(member.task_count)}`}>
-                      {member.task_count}
-                    </div>
-                    <div className="text-xs text-gray-500">
-                      {member.task_count === 0 ? 'tasks' :
-                        member.task_count === 1 ? 'task' : 'tasks'}
+                    <div className="flex flex-col items-center">
+                       <div className={`text-lg font-bold ${getTaskCountColor(member.task_count)}`}>
+                         {member.task_count}
+                       </div>
+                       <div className="w-12 h-1 bg-slate-100 rounded-full mt-1 overflow-hidden">
+                          <div 
+                            className={`h-full rounded-full ${
+                              member.task_count <= 3 ? 'bg-green-500' : member.task_count <= 6 ? 'bg-orange-500' : 'bg-red-500'
+                            }`}
+                            style={{ width: `${Math.min(100, (member.task_count / 8) * 100)}%` }}
+                          ></div>
+                       </div>
                     </div>
                   </td>
                 </tr>
@@ -169,15 +180,7 @@ export const MemberTaskList: React.FC<MemberTaskListProps> = ({ className = '' }
 
         {members.length === 0 && (
           <div className="px-6 py-12 text-center">
-            <div className="text-gray-500">
-              <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-2.239" />
-              </svg>
-              <h3 className="mt-2 text-sm font-medium text-gray-900">Không có nhân viên</h3>
-              <p className="mt-1 text-sm text-gray-500">
-                Chưa có nhân viên nào trong hệ thống.
-              </p>
-            </div>
+            <div className="text-slate-400 text-sm">Chưa có dữ liệu nhân viên.</div>
           </div>
         )}
       </div>
