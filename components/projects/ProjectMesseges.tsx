@@ -12,9 +12,12 @@ import {
 import BackButton from "../shared/BackButton";
 import { useChat } from "./ChatContext";
 import { getCurrentUser, getInitialUppercase } from "@/utils";
+import { useLocation } from "react-router-dom";
 
 const MessengerPage = () => {
   const currentUser = getCurrentUser();
+    const location = useLocation(); // ← thêm dòng này
+
 
   const {
     chatUsers,
@@ -24,6 +27,7 @@ const MessengerPage = () => {
     isLoading,
     error,
     sendMessage,
+    ensureUserInList,
   } = useChat();
 
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
@@ -79,6 +83,53 @@ const MessengerPage = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     setNewMessageCount(0);
   };
+
+//  useEffect(() => {
+//     if (chatUsers.length === 0) return;
+
+//     const params = new URLSearchParams(location.search); // ✅ giờ dùng đúng hook
+//     const encodedStatus = params.get("status");
+//     if (encodedStatus) {
+//       const decodedUsername = atob(encodedStatus);
+//       ensureUserInList(decodedUsername).then(() => {
+//         setActiveUserId(decodedUsername);
+//       });
+//     }
+//   }, [location.search, chatUsers]);
+
+
+// useEffect(() => {
+//   console.log("🔍 chatUsers:", chatUsers.length, "| location.search:", location.search);
+//   if (chatUsers.length === 0) return; // chờ load xong
+
+//   const params = new URLSearchParams(location.search);
+//   const encodedStatus = params.get("status");
+//   if (!encodedStatus) return;
+
+//   const decodedUsername = atob(encodedStatus);
+//   console.log("👤 decodedUsername:", decodedUsername);
+
+//   ensureUserInList(decodedUsername).then(() => {
+//     setActiveUserId(decodedUsername);
+//   });
+
+// }, [location.search, chatUsers.length]); // ✅ dùng .length thay vì chatUsers
+// //                   ^^^^^^^^^^^^^^^^^ thay đổi ở đây
+
+// Effect 1: Đọc URL → set activeUserId ngay, không cần chờ chatUsers
+useEffect(() => {
+  const params = new URLSearchParams(location.search);
+  const encodedStatus = params.get("status");
+  if (encodedStatus) {
+    setActiveUserId(atob(encodedStatus));
+  }
+}, [location.search]);
+
+// Effect 2: Khi activeUserId có rồi nhưng chưa có trong list → fetch bổ sung
+useEffect(() => {
+  if (!activeUserId) return;
+  ensureUserInList(activeUserId);
+}, [activeUserId]);
   return (
     <div className="h-screen bg-gradient-to-b from-slate-50 via-white to-white">
       <div className="mx-auto h-full max-w-screen-2xl px-4 py-4">
@@ -131,7 +182,14 @@ const MessengerPage = () => {
 
             {/* Chat list */}
             <div className="p-2 overflow-y-auto h-[calc(100%-120px)]">
-              {filteredChatList.map((chat) => {
+                {filteredChatList.length === 0 ? (
+    <div className="flex flex-col items-center justify-center h-full text-center px-4">
+      <div className="text-4xl mb-3">💬</div>
+      <p className="font-medium text-slate-700">Chưa có cuộc trò chuyện</p>
+      <p className="text-xs text-slate-400 mt-1">Hãy bắt đầu trò chuyện với ai đó</p>
+    </div>
+  ) : 
+              (filteredChatList.map((chat) => {
                 const isActive = chat.userId === activeUserId;
                 // console.log("isActive", chat);
                 return (
@@ -167,135 +225,135 @@ const MessengerPage = () => {
                     </div>
                   </button>
                 );
-              })}
+              }))}
             </div>
           </aside>
 
-          {/* CHAT */}
-          <section className="col-span-8 lg:col-span-9 rounded-3xl border bg-white shadow-sm flex flex-col min-h-0">
-            {/* Header */}
-            <div className="h-16 px-5 border-b flex items-center justify-between sticky top-0 z-20 bg-white">
-              <div className="flex items-center gap-3">
-                {/* <div
-                  className={`relative w-14 h-14 rounded-[22px] flex items-center justify-center text-white text-lg font-semibold
-                                   shadow-lg transition-all duration-500 bg-slate-300 shadow-slate-100 group-hover:bg-indigo-500
-                                  `}
-                >
-                  {getInitialUppercase(activeUser?.name)}
-                  <span className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-white bg-emerald-400" />
-                </div> */}
+      {/* CHAT */}
+<section className="col-span-8 lg:col-span-9 rounded-3xl border bg-white shadow-sm flex flex-col min-h-0">
+  {!activeUserId ? (
+    /* Empty state khi chưa chọn user */
+    <div className="flex flex-col items-center justify-center h-full text-center px-4">
+      <div className="text-6xl mb-4">💬</div>
+      <p className="font-semibold text-slate-700 text-xl">Hãy bắt đầu trò chuyện</p>
+      <p className="text-sm text-slate-400 mt-2">Chọn một người từ danh sách bên trái để bắt đầu</p>
+    </div>
+  ) : (
+    <>
+      {/* Header */}
+      <div className="h-16 px-5 border-b flex items-center justify-between sticky top-0 z-20 bg-white">
+        <div className="flex items-center gap-3">
+          <div
+            className={`relative w-14 h-14 rounded-[22px] flex items-center justify-center text-white text-lg font-semibold
+              shadow-lg transition-all duration-500
+              ${
+                activeUser
+                  ? "bg-indigo-600 shadow-indigo-100"
+                  : "bg-slate-300 shadow-slate-100 group-hover:bg-indigo-500"
+              }`}
+          >
+            {getInitialUppercase(activeUser?.name)}
+            <span className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-white bg-emerald-400" />
+          </div>
+
+          <p className="font-semibold">
+            {activeUser?.name} ({activeUser?.userId})
+          </p>
+        </div>
+
+        <div className="flex gap-2">
+          <button className="icon-btn">
+            <Phone size={18} />
+          </button>
+          <button className="icon-btn">
+            <Video size={18} />
+          </button>
+        </div>
+      </div>
+
+      {/* Messages */}
+      <div
+        ref={messagesContainerRef}
+        className="flex-1 min-h-0 overflow-y-auto px-5 py-4 space-y-3 bg-slate-50/40"
+      >
+        {isLoading && (
+          <div className="text-sm text-slate-500">Đang tải tin nhắn...</div>
+        )}
+        {error && <div className="text-sm text-red-600">{error}</div>}
+
+        {!isLoading &&
+          !error &&
+          messages.length === 0 && (
+            <div className="flex flex-col items-center justify-center h-full text-center">
+              <div className="text-4xl mb-3">👋</div>
+              <p className="font-medium text-slate-600">Chưa có tin nhắn nào</p>
+              <p className="text-xs text-slate-400 mt-1">Hãy gửi tin nhắn đầu tiên!</p>
+            </div>
+          )}
+
+        {!isLoading &&
+          !error &&
+          messages.map((m) => {
+            const isMe = currentUser?.id === m.sender_id;
+            return (
+              <div
+                key={m.message_id}
+                className={`flex ${isMe ? "justify-end" : "justify-start"} gap-2`}
+              >
                 <div
-                  className={`relative w-14 h-14 rounded-[22px] flex items-center justify-center text-white text-lg font-semibold
-                    shadow-lg transition-all duration-500
+                  className={`max-w-[75%] px-4 py-2 rounded-2xl text-sm shadow animate-message
                     ${
-                      activeUser
-                        ? "bg-indigo-600 shadow-indigo-100"
-                        : "bg-slate-300 shadow-slate-100 group-hover:bg-indigo-500"
-                    }`}
+                      isMe
+                        ? "bg-indigo-600 text-white rounded-br-md"
+                        : "bg-white border border-slate-200 rounded-bl-md"
+                    }
+                  `}
                 >
-                  {getInitialUppercase(activeUser?.name)}
-                  <span className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-white bg-emerald-400" />
+                  {m.text}
                 </div>
-
-                <p className="font-semibold">
-                  {activeUser?.name} ({activeUser?.userId})
-                </p>
               </div>
+            );
+          })}
 
-              <div className="flex gap-2">
-                <button className="icon-btn">
-                  <Phone size={18} />
-                </button>
-                <button className="icon-btn">
-                  <Video size={18} />
-                </button>
-              </div>
-            </div>
-
-            {/* Messages */}
-            <div
-              ref={messagesContainerRef}
-              className="flex-1 min-h-0 overflow-y-auto px-5 py-4 space-y-3 bg-slate-50/40"
+        {newMessageCount > 0 && (
+          <div className="sticky bottom-2 flex justify-center">
+            <button
+              onClick={scrollToBottom}
+              className="px-4 py-1 text-xs bg-indigo-600 text-white rounded-full shadow hover:bg-indigo-700"
             >
-              {isLoading && (
-                <div className="text-sm text-slate-500">
-                  Đang tải tin nhắn...
-                </div>
-              )}
-              {error && <div className="text-sm text-red-600">{error}</div>}
+              ↓ {newMessageCount} tin nhắn mới
+            </button>
+          </div>
+        )}
+        <div ref={messagesEndRef} />
+      </div>
 
-              {!isLoading &&
-                !error &&
-                messages.map((m) => {
-                  const isMe = currentUser?.id === m.sender_id;
-                  // console.log("UI MESSAGE:", m);
-                  // console.log("activeUserId:", activeUserId);
-                  // console.log("chatUsers:", chatUsers);
-                  return (
-                    <div
-                      key={m.message_id}
-                      className={`flex ${isMe ? "justify-end" : "justify-start"} gap-2`}
-                    >
-                      {/* Avatar chỉ hiện với tin người khác */}
-                      {/* {!isMe && (
-                        <img
-                          src={activeUser?.avatar || ``}
-                          className="h-8 w-8 rounded-full"
-                          alt=""
-                        />
-                      )} */}
+      {/* Input */}
+      <form
+        onSubmit={handleSubmit}
+        className="border-t px-4 py-3 flex items-center gap-2 sticky bottom-0 z-20 bg-white"
+      >
+        <button type="button" className="icon-btn">
+          <Camera size={18} />
+        </button>
+        <button type="button" className="icon-btn">
+          <Paperclip size={18} />
+        </button>
 
-                      <div
-                        className={`max-w-[75%] px-4 py-2 rounded-2xl text-sm shadow animate-message
-            ${
-              isMe
-                ? "bg-indigo-600 text-white rounded-br-md"
-                : "bg-white border border-slate-200 rounded-bl-md"
-            }
-          `}
-                      >
-                        {m.text}
-                      </div>
-                    </div>
-                  );
-                })}
-              {newMessageCount > 0 && (
-                <div className="sticky bottom-2 flex justify-center">
-                  <button
-                    onClick={scrollToBottom}
-                    className="px-4 py-1 text-xs bg-indigo-600 text-white rounded-full shadow hover:bg-indigo-700"
-                  >
-                    ↓ {newMessageCount} tin nhắn mới
-                  </button>
-                </div>
-              )}
-              <div ref={messagesEndRef} />
-            </div>
+        <input
+          value={inputValue}
+          onChange={(e) => setInputValue(e.target.value)}
+          placeholder="Nhập tin nhắn..."
+          className="flex-1 h-11 rounded-2xl border px-4 text-sm focus:ring-2 focus:ring-indigo-500/30 outline-none"
+        />
 
-            {/* Input */}
-            <form
-              onSubmit={handleSubmit}
-              className="border-t px-4 py-3 flex items-center gap-2 sticky bottom-0 z-20 bg-white"
-            >
-              <button type="button" className="icon-btn">
-                <Camera size={18} />
-              </button>
-              <button type="button" className="icon-btn">
-                <Paperclip size={18} />
-              </button>
-
-              <input
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                placeholder="Nhập tin nhắn..."
-                className="flex-1 h-11 rounded-2xl border px-4 text-sm focus:ring-2 focus:ring-indigo-500/30 outline-none"
-              />
-
-              <button type="submit" className="send-btn">
-                <SendHorizonal size={18} />
-              </button>
-            </form>
-          </section>
+        <button type="submit" className="send-btn">
+          <SendHorizonal size={18} />
+        </button>
+      </form>
+    </>
+  )}
+</section>
         </div>
       </div>
 

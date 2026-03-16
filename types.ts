@@ -38,6 +38,7 @@ export interface AuthenticatedUser {
   name: string;
   role: UserRole;
   token?: string; // Thêm trường token
+  department_id?: string; // ID của quản lý nếu là nhân viên
 }
 
 export interface CheckItem {

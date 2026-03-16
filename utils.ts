@@ -206,3 +206,4 @@ export function getInitialUppercase(value?: string | null) {
 
   return lastWord.charAt(0).toUpperCase();
 }
+

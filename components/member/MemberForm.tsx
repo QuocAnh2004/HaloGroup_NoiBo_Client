@@ -70,17 +70,35 @@ const MemberForm: React.FC<MemberFormProps> = ({ member, onUpdate }) => {
       setHasChanges(false);
     }
   }, [member]);
+  // Cho input/textarea
+const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const { name, value } = e.target;
+  setFormData(prev => ({ ...prev, [name]: value }));
+  setHasChanges(true);
+  setIsSavedSuccess(false);
+};
+
+// Cho SelectGroup
+const handleSelectChange = (value: string) => {
+   console.log("Department ID: " + value);   // 👈 hiển thị id khi chọn option
+  setFormData(prev => ({ ...prev, department_id: value }));
+  setHasChanges(true);
+  setIsSavedSuccess(false);
+};
+
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
     setHasChanges(true);
     setIsSavedSuccess(false);
+    
   };
 
   const handleSave = async () => {
     setIsSaving(true);
     try {
+      console.log("Saving member with data:", formData);
       await membersApi.updateMember(member.id, formData);
       onUpdate({ ...member, ...formData });
       setIsSavedSuccess(true);
@@ -193,16 +211,14 @@ const MemberForm: React.FC<MemberFormProps> = ({ member, onUpdate }) => {
         </div>
 
         <SelectGroup 
-          label="Phòng ban"
-          name="department_id"
+          label="Phòng ban"        
           value={formData.department_id}
-          onChange={handleChange}
+          onChange={handleSelectChange}
           icon={<Layers size={12} />}
           options={departments.map(dept => ({
             value: dept.id,
             label: `${dept.name} (${dept.code})`
-          }))}
-          placeholder="Chọn phòng ban..."
+          }))}         
         />
 
         <TextArea 

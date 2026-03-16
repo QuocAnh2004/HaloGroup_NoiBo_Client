@@ -60,8 +60,10 @@ const ProjectHeader: React.FC<ProjectHeaderProps> = ({ onLogout, onChangePasswor
 
         {/* Body của Menu: Dài xuống hết cỡ */}
         <div className="flex-1 overflow-y-auto p-4 space-y-2">
-
-          <button
+           {currentUser?.role === UserRole.MANAGER && (
+            <>
+            
+             <button
             onClick={() => { navigate("/employees"); setOpen(false); }}
             className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-800 text-slate-300 transition group"
           >
@@ -77,6 +79,9 @@ const ProjectHeader: React.FC<ProjectHeaderProps> = ({ onLogout, onChangePasswor
             <ListTodo size={20} className="group-hover:text-green-400" />
             <span>Công việc nhân viên</span>
           </button>
+        </> 
+           )}
+         
           <button
             onClick={() => { navigate("/messages"); setOpen(false); }}
             className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-800 text-slate-300 transition group"
