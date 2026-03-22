@@ -23,7 +23,7 @@ const ProjectPageContent: React.FC<ProjectPageProps> = ({ onLogout }) => {
 
   return (
     <div className="min-h-screen bg-[#f8fafc] text-slate-800 pb-20 font-light">
-      <ProjectHeader onLogout={onLogout} onChangePassword={handleChangePassword} />
+      {/* <ProjectHeader onLogout={onLogout} onChangePassword={handleChangePassword} /> */}
 
       <main className="max-w-[1600px] mx-auto px-4 md:px-8 mt-8 md:mt-12">
         {/* Layout: Main (65%) - Side (35%) */}

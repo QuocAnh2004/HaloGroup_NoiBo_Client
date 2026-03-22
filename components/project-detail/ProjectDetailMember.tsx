@@ -1,10 +1,13 @@
 
 import React from 'react';
-import { Users, X } from 'lucide-react';
+import { MessageCircleMore, Users, X } from 'lucide-react';
 import { TeamMember } from '../../types';
 import SelectMemberModal from './SelectMemberModal';
 import { useProjectDetail } from './ProjectDetailContext';
 import MemberItem from '../shared/MemberItem';
+import {  getCurrentUser } from "../../utils";
+import { useNavigate } from 'react-router-dom';
+
 
 const ProjectDetailMember: React.FC = () => {
   const { project, updateProject, isReadOnly } = useProjectDetail();
@@ -26,6 +29,18 @@ const ProjectDetailMember: React.FC = () => {
     if (isReadOnly) return;
     updateProject({ teamMembers: members.filter(m => m.id !== id) });
   };
+  const currentUser = getCurrentUser();
+   const navigate = useNavigate();
+       const handleChatMess = (id: string) => {
+       const chooseUser = project.teamMembers.find((member) => member.id === id) || "unknown";
+        const idChatUser = id;
+        console.log("idChatUser==============", idChatUser);
+        console.log("ownerUsername=============", chooseUser);
+               const encodedUsername = btoa(idChatUser);
+        navigate(`/messages?status=${encodedUsername}`); // ✅ gộp vào đây
+
+    }
+  
 
   return (
     <section className="w-full bg-white border-b border-slate-50 px-4 md:px-10 py-6 md:py-10">
@@ -57,31 +72,45 @@ const ProjectDetailMember: React.FC = () => {
           </div>
 
           {/* Member List */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {members.map((member) => (
-              <MemberItem 
-                key={member.id}
-                member={member}
-                variant="full"
-                className={isReadOnly ? 'opacity-80' : ''}
-                action={!isReadOnly && (
-                  <button 
-                    onClick={(e) => { e.stopPropagation(); handleRemove(member.id); }}
-                    className="w-8 h-8 bg-white text-rose-500 rounded-xl flex items-center justify-center hover:bg-rose-50 hover:text-rose-600 transition-all shadow-sm active:scale-95"
-                    title="Gỡ khỏi dự án"
-                  >
-                    <X size={14} strokeWidth={2.5} />
-                  </button>
-                )}
-              />
-            ))}
+         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+  {members.map((member) => (
+    <MemberItem 
+      key={member.id}
+      member={member}
+      variant="full"
+      className={isReadOnly ? 'opacity-80' : ''}
+      action={
+        <div className="flex items-center gap-1">
+          {member.id !== currentUser?.id && (
+            <button
+              onClick={(e) => { e.stopPropagation(); handleChatMess(member.id); }}
+              className="w-8 h-8 bg-white text-primary rounded-xl flex items-center justify-center hover:bg-blue-50 hover:text-blue-600 transition-all shadow-sm active:scale-95"
+              title="Nhắn tin"
+            >
+              <MessageCircleMore size={14} strokeWidth={2.5} />
+            </button>
+          )}
 
-            {members.length === 0 && (
-              <div className="col-span-full py-10 border-2 border-dashed border-slate-100 rounded-[28px] md:rounded-[32px] flex flex-col items-center justify-center text-slate-300">
-                <p className="text-xs md:text-sm font-light italic">Chưa có nhân sự nào được chỉ định</p>
-              </div>
-            )}
-          </div>
+          {!isReadOnly && (
+            <button 
+              onClick={(e) => { e.stopPropagation(); handleRemove(member.id); }}
+              className="w-8 h-8 bg-white text-rose-500 rounded-xl flex items-center justify-center hover:bg-rose-50 hover:text-rose-600 transition-all shadow-sm active:scale-95"
+              title="Gỡ khỏi dự án"
+            >
+              <X size={14} strokeWidth={2.5} />
+            </button>
+          )}
+        </div>
+      }
+    />
+  ))}
+
+  {members.length === 0 && (
+    <div className="col-span-full py-10 border-2 border-dashed border-slate-100 rounded-[28px] md:rounded-[32px] flex flex-col items-center justify-center text-slate-300">
+      <p className="text-xs md:text-sm font-light italic">Chưa có nhân sự nào được chỉ định</p>
+    </div>
+  )}
+</div>
         </div>
       </div>
     </section>

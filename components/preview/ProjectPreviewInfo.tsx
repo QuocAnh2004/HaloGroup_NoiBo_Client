@@ -198,28 +198,28 @@ const ProjectPreviewInfo: React.FC<ProjectPreviewInfoProps> = ({ project }) => {
                 Đội ngũ thực hiện
               </span>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {project.teamMembers.length > 0 ? (
-                project.teamMembers.map((member) => (
-                  <div key={member.id} className="flex items-center gap-2">
-                    <MemberItem member={member} variant="full" />
-                    {member.id !== currentUser?.id && (
-                      <span className="text-red-500 text-sm font-medium">
-                            
-                            <i onClick={() => handleChatMess(member.id)} className="bi bi-chat-dots-fill text-primary"><MessageCircleMore/></i>
-                        
-
-                       
-                      </span>
-                    )}
-                  </div>
-                ))
-              ) : (
-                <p className="text-slate-300 italic font-light">
-                  Chưa có thông tin nhân sự.
-                </p>
-              )}
-            </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+  {project.teamMembers.length > 0 ? (
+    project.teamMembers.map((member) => (
+      <div key={member.id} className="flex items-center gap-2">
+        <MemberItem member={member} variant="full" />
+        {member.id !== currentUser?.id && (
+          <button
+            onClick={() => handleChatMess(member.id)}
+            className="w-8 h-8 bg-white text-primary rounded-xl flex items-center justify-center hover:bg-blue-50 hover:text-blue-600 transition-all shadow-sm active:scale-95"
+            title="Nhắn tin"
+          >
+            <MessageCircleMore size={14} strokeWidth={2.5} />
+          </button>
+        )}
+      </div>
+    ))
+  ) : (
+    <p className="text-slate-300 italic font-light">
+      Chưa có thông tin nhân sự.
+    </p>
+  )}
+</div>
           </div>
 
           <div className="flex gap-10 pt-4">
