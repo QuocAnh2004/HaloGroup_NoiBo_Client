@@ -4,9 +4,13 @@ import Loading from '../shared/Loading';
 
 interface MemberTaskListProps {
   className?: string;
+  hideHeader?: boolean;
 }
 
-export const MemberTaskList: React.FC<MemberTaskListProps> = ({ className = '' }) => {
+export const MemberTaskList: React.FC<MemberTaskListProps> = ({ 
+  className = '', 
+  hideHeader = false 
+}) => {
   const [members, setMembers] = useState<SystemUserWithTaskCount[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -67,16 +71,18 @@ export const MemberTaskList: React.FC<MemberTaskListProps> = ({ className = '' }
   return (
     <div className={`${className}`}>
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-        <div className="px-6 py-5 border-b border-slate-100 flex justify-between items-center">
-          <div>
-            <h3 className="text-lg font-bold text-slate-800">
-              Danh sách nhân viên và công việc
-            </h3>
-            <p className="text-sm text-slate-500 mt-0.5">
-              Tổng số {members.length} nhân viên
-            </p>
+        {!hideHeader && (
+          <div className="px-6 py-5 border-b border-slate-100 flex justify-between items-center">
+            <div>
+              <h3 className="text-lg font-bold text-slate-800">
+                Danh sách nhân viên và công việc
+              </h3>
+              <p className="text-sm text-slate-500 mt-0.5">
+                Tổng số {members.length} nhân viên
+              </p>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Scrollable Container with Max Height */}
         <div className="overflow-x-auto max-h-[500px] overflow-y-auto">

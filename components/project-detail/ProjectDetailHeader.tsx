@@ -54,7 +54,7 @@ const ProjectDetailHeader: React.FC<ProjectDetailHeaderProps> = ({
   const onPreview = () => navigate(`/project/${project.id}/preview`);
 
   return (
-    <header className="bg-white/90 backdrop-blur-md sticky top-0 z-30 shadow-sm border-b border-slate-100 transition-all">
+    <header className="bg-white/95 backdrop-blur-md sticky top-20 z-40 shadow-sm border-b border-slate-100 transition-all">
       <div className="max-w-[1600px] mx-auto px-4 md:px-8 py-3 md:py-4">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 md:gap-6">
           

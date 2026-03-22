@@ -1,12 +1,12 @@
 
 import React from 'react';
-import { Search, CheckCircle2, Circle } from 'lucide-react';
+import { Search, CheckCircle2, Circle, Users } from 'lucide-react';
 import { useProjects } from './ProjectContext';
 import ProjectCard from './ProjectCard';
 import AddProjectModal from './AddProjectModal';
 import Loading from '../shared/Loading';
-import SearchBox from '../shared/SearchBox';
 import TabTriggers, { TabOption } from '../shared/TabTriggers';
+import { MemberTaskList } from '../member/MemberTaskList';
 
 interface ProjectListProps {
   onProjectClick: (id: string) => void;
@@ -21,10 +21,12 @@ const ProjectList: React.FC<ProjectListProps> = ({ onProjectClick }) => {
     setSearchTerm,
     activeCount,
     completedCount,
+    memberCount,
+    totalMemberTasks,
     isLoading 
   } = useProjects();
 
-  const tabs: TabOption<'IN_PROGRESS' | 'COMPLETED'>[] = [
+  const tabs: TabOption<'IN_PROGRESS' | 'COMPLETED' | 'MEMBER_TASKS'>[] = [
     {
       value: 'IN_PROGRESS',
       label: 'Đang làm',
@@ -40,6 +42,14 @@ const ProjectList: React.FC<ProjectListProps> = ({ onProjectClick }) => {
       count: completedCount,
       activeColorClass: 'text-emerald-600',
       activeBgClass: 'bg-emerald-50'
+    },
+    {
+      value: 'MEMBER_TASKS',
+      label: 'Công việc nhân viên',
+      icon: <Users size={18} />,
+      count: totalMemberTasks,
+      activeColorClass: 'text-blue-600',
+      activeBgClass: 'bg-blue-50'
     }
   ];
 
@@ -51,30 +61,19 @@ const ProjectList: React.FC<ProjectListProps> = ({ onProjectClick }) => {
         <AddProjectModal />
       </div>
 
-      {/* Tabs Selection */}
-      <TabTriggers 
-        tabs={tabs}
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
-      />
 
-      {/* Toolbar: Search Only */}
-      <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
-        <SearchBox 
-          placeholder="Tìm kiếm dự án..." 
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          containerClassName="w-full sm:max-w-xs"
-        />
-      </div>
 
-      {/* Project Grid / Loading / Empty State */}
+      {/* Content Rendering */}
       {isLoading ? (
         <div className="py-20">
-           <Loading variant="component" text="Đang tải danh sách dự án..." />
+           <Loading variant="component" text="Đang tải dữ liệu..." />
+        </div>
+      ) : activeTab === 'MEMBER_TASKS' ? (
+        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+           <MemberTaskList hideHeader />
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-in fade-in duration-500">
           {filteredProjects.map((project) => (
             <div key={project.id} onClick={() => onProjectClick(project.id)} className="cursor-pointer">
               <ProjectCard project={project} />

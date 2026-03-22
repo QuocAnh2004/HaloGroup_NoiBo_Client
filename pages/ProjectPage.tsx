@@ -3,8 +3,6 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import ProjectList from '../components/projects/ProjectList';
 import ProjectTeam from '../components/projects/ProjectTeam';
-import ProjectHeader from '../components/projects/ProjectHeader';
-import { ProjectProvider } from '../components/projects/ProjectContext';
 
 interface ProjectPageProps {
   onLogout: () => void;
@@ -23,7 +21,6 @@ const ProjectPageContent: React.FC<ProjectPageProps> = ({ onLogout }) => {
 
   return (
     <div className="min-h-screen bg-[#f8fafc] text-slate-800 pb-20 font-light">
-      <ProjectHeader onLogout={onLogout} onChangePassword={handleChangePassword} />
 
       <main className="max-w-[1600px] mx-auto px-4 md:px-8 mt-8 md:mt-12">
         {/* Layout: Main (65%) - Side (35%) */}
@@ -48,9 +45,7 @@ const ProjectPageContent: React.FC<ProjectPageProps> = ({ onLogout }) => {
 
 const ProjectPage: React.FC<ProjectPageProps> = (props) => {
   return (
-    <ProjectProvider>
       <ProjectPageContent {...props} />
-    </ProjectProvider>
   );
 };
 

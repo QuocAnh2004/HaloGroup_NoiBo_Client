@@ -1,18 +1,21 @@
 
 import React, { createContext, useContext, useState, useMemo, ReactNode, useEffect } from 'react';
+import { useSearchParams, useNavigate, useLocation } from 'react-router-dom';
 import { Project, ProjectStatus, ProjectPriority } from '../../types';
 import { projectsApi } from '../../api/projects';
 
 interface ProjectContextType {
   projects: Project[];
   searchTerm: string;
-  activeTab: 'IN_PROGRESS' | 'COMPLETED';
+  activeTab: 'IN_PROGRESS' | 'COMPLETED' | 'MEMBER_TASKS';
   filteredProjects: Project[];
   activeCount: number;
   completedCount: number;
+  memberCount: number;
+  totalMemberTasks: number;
   isLoading: boolean;
   setSearchTerm: (term: string) => void;
-  setActiveTab: (tab: 'IN_PROGRESS' | 'COMPLETED') => void;
+  setActiveTab: (tab: 'IN_PROGRESS' | 'COMPLETED' | 'MEMBER_TASKS') => void;
   addProject: (project: Project) => Promise<void>;
   updateProject: (id: string, data: Partial<Project>) => Promise<void>;
 }
@@ -27,27 +30,84 @@ export const useProjects = () => {
   return context;
 };
 
-export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+export const ProjectProvider: React.FC<{ children: ReactNode; user?: any }> = ({ children, user }) => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [activeTab, setActiveTab] = useState<'IN_PROGRESS' | 'COMPLETED'>('IN_PROGRESS');
+  const [activeTab, setActiveTab] = useState<'IN_PROGRESS' | 'COMPLETED' | 'MEMBER_TASKS'>('IN_PROGRESS');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [memberCount, setMemberCount] = useState(0);
+  const [totalMemberTasks, setTotalMemberTasks] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const navigate = useNavigate();
+  const location = useLocation();
 
-  // Load dự án khi mount
+  // Load dự án và số lượng nhân viên khi mount/login
   useEffect(() => {
-    const loadProjects = async () => {
+    const loadInitialData = async () => {
+      const savedUser = localStorage.getItem('hola_user');
+      if (!savedUser) {
+        setIsLoading(false);
+        return;
+      }
+
       setIsLoading(true);
       try {
-        const data = await projectsApi.fetchProjects();
-        setProjects(data);
+        const [projectsData, membersData] = await Promise.all([
+          projectsApi.fetchProjects(),
+          import('../../api/members').then(m => m.membersApi.fetchMembersWithTaskCount())
+        ]);
+        setProjects(projectsData);
+        setMemberCount(membersData.length);
+        const totalTasks = membersData.reduce((sum, m) => sum + (m.task_count || 0), 0);
+        setTotalMemberTasks(totalTasks);
       } catch (error) {
-        console.error("Failed to fetch projects:", error);
+        console.error("Failed to fetch initial data:", error);
       } finally {
         setIsLoading(false);
       }
     };
-    loadProjects();
-  }, []);
+    loadInitialData();
+  }, [user?.id]);
+
+  // Đồng bộ activeTab với URL search params
+  useEffect(() => {
+    const tabParam = searchParams.get('tab');
+    if (tabParam === 'member-tasks' && activeTab !== 'MEMBER_TASKS') {
+      setActiveTab('MEMBER_TASKS');
+    } else if (tabParam === 'completed' && activeTab !== 'COMPLETED') {
+      setActiveTab('COMPLETED');
+    } else if (!tabParam && activeTab === 'MEMBER_TASKS') {
+      // Nếu không có param mà đang ở tab nhân viên thì về tab mặc định
+      setActiveTab('IN_PROGRESS');
+    }
+  }, [searchParams, activeTab]);
+
+  // Khi activeTab thay đổi bắng tay trên UI, cập nhật URL (tùy chọn nhưng tốt cho UX)
+  const handleTabChange = (tab: 'IN_PROGRESS' | 'COMPLETED' | 'MEMBER_TASKS') => {
+    setActiveTab(tab);
+    
+    // Nếu không ở trang chủ, chuyển về trang chủ
+    if (location.pathname !== '/') {
+      if (tab === 'MEMBER_TASKS') {
+        navigate('/?tab=member-tasks');
+      } else if (tab === 'COMPLETED') {
+        navigate('/?tab=completed');
+      } else {
+        navigate('/');
+      }
+      return;
+    }
+
+    if (tab === 'MEMBER_TASKS') {
+      setSearchParams({ tab: 'member-tasks' });
+    } else if (tab === 'COMPLETED') {
+      setSearchParams({ tab: 'completed' });
+    } else {
+      const newParams = new URLSearchParams(searchParams);
+      newParams.delete('tab');
+      setSearchParams(newParams);
+    }
+  };
 
   const addProject = async (project: Project) => {
     // Optimistic update: Cập nhật UI ngay lập tức
@@ -114,9 +174,11 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
       filteredProjects,
       activeCount,
       completedCount,
+      memberCount,
+      totalMemberTasks,
       isLoading,
       setSearchTerm,
-      setActiveTab,
+      setActiveTab: handleTabChange,
       addProject,
       updateProject
     }}>

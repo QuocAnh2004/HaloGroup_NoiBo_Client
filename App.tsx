@@ -14,6 +14,7 @@ import Login from './components/auth/Login';
 import ChangePassword from './components/auth/ChangePassword';
 import { AuthenticatedUser, UserRole } from './types';
 import ProjectHeader from './components/projects/ProjectHeader';
+import { ProjectProvider } from './components/projects/ProjectContext';
 
 
 // Helper component for protected routes defined outside to prevent re-creation and type errors
@@ -66,19 +67,17 @@ const App: React.FC = () => {
   if (isLoading) return null;
 
   return (
-    <>
+    <ProjectProvider user={user}>
       {/* Header luôn hiển thị */}
       {user && (
         <ProjectHeader
+          user={user}
           onLogout={handleLogout}
           onChangePassword={() => navigate("/change-password")}
         />
       )}
 
-
       <Routes>
-
-
         <Route path="/login" element={!user ? <Login onLogin={handleLogin} /> : <Navigate to="/" replace />} />
 
         {/* Route đổi mật khẩu công khai */}
@@ -157,12 +156,8 @@ const App: React.FC = () => {
 
         {/* Mọi route lạ đều về trang chủ */}
         <Route path="*" element={<Navigate to="/" replace />} />
-
-
-
       </Routes>
-    </>
-
+    </ProjectProvider>
   );
 };
 
