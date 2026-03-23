@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useNavigate, useSearchParams } from 'react-router-dom';
 import ProjectPage from './pages/ProjectPage';
 import ProjectDetailPage from './pages/ProjectDetailPage';
 import ProjectPreviewPage from './pages/ProjectPreviewPage';
@@ -14,6 +14,7 @@ import Login from './components/auth/Login';
 import ChangePassword from './components/auth/ChangePassword';
 import { AuthenticatedUser, UserRole } from './types';
 import ProjectHeader from './components/projects/ProjectHeader';
+import AuthCallback from './components/projects/AuthCallback';
 
 
 // Helper component for protected routes defined outside to prevent re-creation and type errors
@@ -38,6 +39,7 @@ const App: React.FC = () => {
   const [user, setUser] = useState<AuthenticatedUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
+    
 
   useEffect(() => {
     const savedUser = localStorage.getItem('hola_user');
@@ -155,6 +157,10 @@ const App: React.FC = () => {
           </ProtectedRoute>
         } />
 
+        <Route path="/auth-callback" element={<AuthCallback onLogin={handleLogin} />} />
+{/* <Route path="/auth-callback" element={
+  (() => { console.log('>>> Route auth-callback matched!'); return <AuthCallback onLogin={handleLogin} />; })()
+} /> */}
         {/* Mọi route lạ đều về trang chủ */}
         <Route path="*" element={<Navigate to="/" replace />} />
 

@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Fingerprint, Info, ShieldCheck, User } from "lucide-react";
+import { Fingerprint, Info, MessageCircleMore, ShieldCheck, User } from "lucide-react";
 import AddMemberModal from "./AddMemberModal";
 import { UserRole } from "../../types";
 import { membersApi, SystemUser } from "../../api/members";
@@ -9,6 +9,7 @@ import Loading from "../shared/Loading";
 import SearchBox from "../shared/SearchBox";
 import TabTriggers, { TabOption } from "../shared/TabTriggers";
 import BackButton from "../shared/BackButton";
+import { getCurrentUser } from "@/utils";
 
 const ProjectTeam: React.FC = () => {
   const navigate = useNavigate();
@@ -94,7 +95,12 @@ const ProjectTeam: React.FC = () => {
       activeBgClass: "bg-sky-50",
     },
   ];
-
+    const currentUser = getCurrentUser();
+  
+const handleChatMess = (id: string) => {
+  const encodedUsername = btoa(id);
+  navigate(`/messages?status=${encodedUsername}`);
+};
   return (
  <div className="min-h-[calc(100vh-64px)] bg-gradient-to-b from-slate-50 via-white to-white">
   <div className="container mx-auto max-w-7xl px-4 md:px-8 py-6 md:py-10">
@@ -152,69 +158,74 @@ const ProjectTeam: React.FC = () => {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {filteredMembers.map((member) => (
-            <div
-              key={member.id}
-              onClick={() => navigate(`/member/${member.id}`)}
-              className="group cursor-pointer rounded-[28px] border border-slate-200 bg-white p-4 md:p-5
-                         hover:-translate-y-0.5 hover:shadow-[0_12px_40px_rgba(15,23,42,0.08)]
-                         hover:border-indigo-200 transition-all duration-300
-                         focus-within:ring-2 focus-within:ring-indigo-500/30"
-            >
-              <div className="flex items-center justify-between gap-3">
-                <div className="flex items-center gap-4">
-                  {/* Avatar */}
-                  <div
-                    className={`relative w-14 h-14 rounded-[22px] flex items-center justify-center text-white text-lg font-semibold
-                    shadow-lg transition-all duration-500
-                    ${
-                      member.role === UserRole.MANAGER
-                        ? "bg-indigo-600 shadow-indigo-100"
-                        : "bg-slate-300 shadow-slate-100 group-hover:bg-indigo-500"
-                    }`}
-                  >
-                    {getInitial(member.name)}
-                    <span className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-white bg-emerald-400" />
-                  </div>
+        {filteredMembers.map((member) => (
+  <div
+    key={member.id}
+    onClick={() => navigate(`/member/${member.id}`)}
+    className="group cursor-pointer rounded-[28px] border border-slate-200 bg-white p-4 md:p-5
+               hover:-translate-y-0.5 hover:shadow-[0_12px_40px_rgba(15,23,42,0.08)]
+               hover:border-indigo-200 transition-all duration-300
+               focus-within:ring-2 focus-within:ring-indigo-500/30"
+  >
+    <div className="flex items-center justify-between gap-3">
+      <div className="flex items-center gap-4">
+        {/* Avatar */}
+        <div
+          className={`relative w-14 h-14 rounded-[22px] flex items-center justify-center text-white text-lg font-semibold
+          shadow-lg transition-all duration-500
+          ${
+            member.role === UserRole.MANAGER
+              ? "bg-indigo-600 shadow-indigo-100"
+              : "bg-slate-300 shadow-slate-100 group-hover:bg-indigo-500"
+          }`}
+        >
+          {getInitial(member.name)}
+          <span className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-white bg-emerald-400" />
+        </div>
 
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <h4 className="text-sm font-semibold text-slate-900 group-hover:text-indigo-600 transition-colors">
-                        {member.name}
-                      </h4>
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <h4 className="text-sm font-semibold text-slate-900 group-hover:text-indigo-600 transition-colors">
+              {member.name}
+            </h4>
+            {member.role === UserRole.MANAGER && (
+              <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
+            )}
+          </div>
+          <div className="flex items-center gap-2 text-slate-400">
+            <Fingerprint size={12} />
+            <span className="text-[10px] font-medium tracking-widest uppercase bg-slate-50 px-2 py-0.5 rounded-lg border border-slate-100">
+              {member.id}
+            </span>
+          </div>
+        </div>
+      </div>
 
-                     
+      {/* Actions */}
+      <div className="flex items-center gap-1.5">
+        {member.id !== currentUser?.id && (
+          <button
+            onClick={(e) => { e.stopPropagation(); handleChatMess(member.id); }}
+            className="h-8 w-8 rounded-full border border-slate-200 bg-white flex items-center justify-center
+                       text-slate-400 hover:text-indigo-600 hover:border-indigo-200 hover:bg-blue-50
+                       transition-all shadow-sm active:scale-95"
+            title="Nhắn tin"
+          >
+            <MessageCircleMore size={14} strokeWidth={2.5} />
+          </button>
+        )}
 
-                      {member.role === UserRole.MANAGER && (
-                        <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
-                      )}
-                    </div>
-
-                    <div className="flex items-center gap-2 text-slate-400">
-                      <Fingerprint size={12} />
-                      <span className="text-[10px] font-medium tracking-widest uppercase bg-slate-50 px-2 py-0.5 rounded-lg border border-slate-100">
-                        {member.id}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Chevron */}
-                <div className="h-10 w-10 rounded-full border border-slate-200 bg-white flex items-center justify-center text-slate-400
-                                group-hover:text-indigo-600 group-hover:border-indigo-200 transition">
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    className="h-5 w-5"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                  >
-                    <path d="M9 18l6-6-6-6" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </div>
-              </div>
-            </div>
-          ))}
+        {/* Chevron */}
+        <div className="h-10 w-10 rounded-full border border-slate-200 bg-white flex items-center justify-center text-slate-400
+                        group-hover:text-indigo-600 group-hover:border-indigo-200 transition">
+          <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5" stroke="currentColor" strokeWidth="2">
+            <path d="M9 18l6-6-6-6" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </div>
+      </div>
+    </div>
+  </div>
+))}
 
           {filteredMembers.length === 0 && (
             <div className="md:col-span-2 rounded-[32px] border border-slate-200 bg-white p-10 text-center">

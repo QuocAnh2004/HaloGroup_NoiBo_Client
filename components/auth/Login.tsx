@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { Fingerprint, Lock, ArrowRight, AlertCircle, ShieldCheck } from 'lucide-react';
+import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
+import { Fingerprint, Lock, ArrowRight, AlertCircle, ShieldCheck, Mail } from 'lucide-react';
 import { AuthenticatedUser, UserRole } from '../../types';
 import { authApi } from '../../api/auth';
 import Button from '../../components/shared/Button';
@@ -11,12 +11,17 @@ interface LoginProps {
 }
 
 const Login: React.FC<LoginProps> = ({ onLogin }) => {
+    // Thêm vào đầu component Login
+const [searchParams] = useSearchParams();
+const [error, setError] = useState<string | null>(searchParams.get('error') || null  // Hiển thị lỗi redirect từ Google
+);
+
   const navigate = useNavigate();
   const location = useLocation();
   
   const [userId, setUserId] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState<string | null>(null);
+  // const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -44,6 +49,8 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
       setIsLoading(false);
     }
   };
+
+
 
   return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6 relative overflow-hidden z-50">
@@ -74,7 +81,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                   placeholder="Mã ID (VD: 1024)"
                   value={userId}
                   onChange={(e) => setUserId(e.target.value)}
-                  maxLength={4}
+                  // maxLength={4}
                   className="w-full bg-slate-50 rounded-[24px] py-4 pl-14 pr-6 placeholder:text-slate-300 focus:outline-none focus:bg-indigo-50/30 transition-all font-light text-slate-800"
                   required
                   disabled={isLoading}
@@ -114,6 +121,17 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                 <span>Đăng nhập</span>
                 {!isLoading && <ArrowRight size={20} />}
               </Button>
+              {/* // Thêm nút Google vào form, ngay dưới nút đăng nhập chính */}
+<Button
+  type="button"
+  variant="secondary"
+  onClick={() => window.location.href = 'http://localhost:3001/api/auth/google'}
+  disabled={isLoading}
+  className="w-full py-4 rounded-[24px] border border-slate-200 text-sm"
+>
+  <Mail />
+  <span>Tiếp tục với Google</span>
+</Button>
 
               <Button
                 type="button"
